@@ -94,7 +94,7 @@ export class TerminalGrid {
   readonly el = el('section', 'terms');
   private panels: TerminalPanel[] = [];
 
-  constructor(private engine: SimulationEngine, count: number, cols: number) {
+  constructor(private engine: SimulationEngine, count: number, cols: number, private reducedMotion = false) {
     this.el.style.gridTemplateColumns = 'repeat(' + cols + ', minmax(0, 1fr))';
     this.el.style.gridTemplateRows = 'repeat(' + Math.ceil(count / cols) + ', minmax(0, 1fr))';
     for (let i = 0; i < count; i++) {
@@ -104,7 +104,10 @@ export class TerminalGrid {
     }
   }
 
-  update(): void {
+  update(nowMs: number): void {
+    // Cursor blink: one class toggle per ~550 ms instead of a perpetual CSS animation.
+    const blinkOff = !this.reducedMotion && Math.floor(nowMs / 550) % 2 === 1;
+    setClass(this.el, blinkOff ? 'terms blink-off' : 'terms');
     const shown = new Set<Agent>();
     for (const p of this.panels) if (p.agent) shown.add(p.agent);
     for (const panel of this.panels) {

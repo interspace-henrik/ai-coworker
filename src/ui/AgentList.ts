@@ -9,10 +9,19 @@ interface Row {
   bar: HTMLElement;
 }
 
+/** The list glides up one row this often (ms). */
+const ROW_MS = 2400;
+/** Must match the .ag-track.scrolling transition duration in CSS. */
+const GLIDE_MS = 700;
+/** With reduced motion the list pages instead of gliding, this often (ms). */
+const PAGE_MS = 8000;
+
 /**
- * Agent pool. When the list is taller than its panel it scrolls continuously: the rows are
- * rendered twice and the track is translated by -50% in a CSS animation, so the loop is
- * seamless and runs on the compositor.
+ * Agent pool. When the list is taller than its panel it rotates: the rows are rendered twice
+ * and the track glides up one row at a time with a short transform transition. After a full
+ * copy it snaps back invisibly. Gliding in steps rather than scrolling continuously keeps the
+ * compositor idle most of the time, which matters on a Raspberry Pi. With
+ * prefers-reduced-motion it pages instead.
  */
 export class AgentList {
   readonly el = el('section', 'panel agents');
@@ -23,8 +32,14 @@ export class AgentList {
   private rows = new Map<string, Row[]>();
   private revs = new Map<string, number>();
   private scrolling = false;
+  private overflow = false;
+  private lastPage = 0;
+  private offset = 0;
+  private lastGlide = 0;
+  /** Height of one copy of the list, measured in layout() so glide() never forces layout. */
+  private copyHeight = 0;
 
-  constructor(private engine: SimulationEngine) {
+  constructor(private engine: SimulationEngine, private reducedMotion = false) {
     const head = el('div', 'ph');
     head.append(el('span', 'ph-title', 'Agent pool'), this.count);
     this.viewport.append(this.track);
@@ -50,11 +65,27 @@ export class AgentList {
       this.track.append(copy);
     }
     this.scrolling = duplicate;
+    this.offset = 0;
+    this.track.style.transform = '';
     setClass(this.track, duplicate ? 'ag-track scrolling' : 'ag-track');
-    if (duplicate) {
-      // Constant reading speed regardless of agent count.
-      this.track.style.animationDuration = this.engine.agents.length * 2.4 + 's';
+  }
+
+  private glide(nowMs: number): void {
+    const copyHeight = this.copyHeight;
+    if (!copyHeight) return;
+    if (this.offset >= copyHeight) {
+      // Both copies are identical, so jumping back one copy height is invisible.
+      if (nowMs - this.lastGlide < GLIDE_MS) return;
+      this.offset -= copyHeight;
+      setClass(this.track, 'ag-track scrolling snap');
+      this.track.style.transform = 'translateY(' + -this.offset + 'px)';
+      void this.track.offsetHeight;
+      setClass(this.track, 'ag-track scrolling');
     }
+    if (nowMs - this.lastGlide < ROW_MS) return;
+    this.lastGlide = nowMs;
+    this.offset += copyHeight / this.engine.agents.length;
+    this.track.style.transform = 'translateY(' + -this.offset.toFixed(1) + 'px)';
   }
 
   private makeRow(agent: Agent): Row {
@@ -79,11 +110,21 @@ export class AgentList {
   layout(): void {
     const single = this.copies[0];
     if (!single) return;
-    const overflow = single.offsetHeight > this.viewport.clientHeight + 2;
-    if (overflow !== this.scrolling) this.build(overflow);
+    this.overflow = single.offsetHeight > this.viewport.clientHeight + 2;
+    const scroll = this.overflow && !this.reducedMotion;
+    if (scroll !== this.scrolling) this.build(scroll);
+    this.copyHeight = this.copies[0].offsetHeight;
+    if (!this.overflow) this.viewport.scrollTop = 0;
   }
 
-  update(): void {
+  update(nowMs: number): void {
+    if (this.reducedMotion && this.overflow && nowMs - this.lastPage >= PAGE_MS) {
+      this.lastPage = nowMs;
+      const v = this.viewport;
+      const next = v.scrollTop + v.clientHeight;
+      v.scrollTop = next >= v.scrollHeight - 2 ? 0 : next;
+    }
+    if (this.scrolling) this.glide(nowMs);
     setText(this.count, this.engine.agents.length + ' agents');
     for (const agent of this.engine.agents) {
       if (this.revs.get(agent.id) === agent.rev) continue;

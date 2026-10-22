@@ -21,9 +21,9 @@ export class Dashboard {
   private chart: ActivityChart;
   private lastChart = -Infinity;
 
-  constructor(private engine: SimulationEngine, cfg: AppConfig) {
-    this.agents = new AgentList(engine);
-    this.terms = new TerminalGrid(engine, cfg.panels, cfg.panelCols);
+  constructor(private engine: SimulationEngine, cfg: AppConfig, reducedMotion = false) {
+    this.agents = new AgentList(engine, reducedMotion);
+    this.terms = new TerminalGrid(engine, cfg.panels, cfg.panelCols, reducedMotion);
     this.metrics = new Metrics(engine);
     this.queue = new TaskQueue(engine);
     this.feed = new EventFeed(engine);
@@ -44,8 +44,8 @@ export class Dashboard {
 
   render(wallNow: number, uptimeMs: number): void {
     this.header.update(this.engine, wallNow, uptimeMs);
-    this.agents.update();
-    this.terms.update();
+    this.agents.update(uptimeMs);
+    this.terms.update(uptimeMs);
     this.metrics.update();
     this.queue.update();
     this.feed.update();
