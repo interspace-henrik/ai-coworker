@@ -35,7 +35,7 @@ export const VOCAB: Readonly<Record<string, readonly string[]>> = {
     'onboarding', 'payments', 'catalog', 'permissions', 'exports',
   ],
   endpoint: [
-    'GET /v2/invoices', 'POST /v2/orders', 'GET /v1/customers/{id}', 'PATCH /v2/subscriptions/{id}',
+    'GET /v2/invoices', 'POST /v2/orders', 'GET /v1/customers/:id', 'PATCH /v2/subscriptions/:id',
     'POST /v1/auth/token', 'GET /v2/reports/monthly', 'POST /v1/webhooks/dispatch',
     'GET /v2/catalog/search',
   ],

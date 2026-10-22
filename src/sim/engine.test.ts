@@ -50,3 +50,49 @@ describe('SimulationEngine', () => {
     }
   });
 });
+
+describe('Phase 2 behaviour', () => {
+  it('produces occasional retries, failures and subtasks without them dominating', () => {
+    const e = new SimulationEngine({ seed: 21 });
+    e.advance(120 * MIN);
+    const done = e.stats.completed + e.stats.failed;
+    expect(e.transitionErrors).toBe(0);
+    expect(e.stats.retries).toBeGreaterThan(0);
+    expect(e.stats.subtasks).toBeGreaterThan(0);
+    expect(e.stats.retries / done).toBeLessThan(0.2);
+    expect(e.stats.failed / done).toBeLessThan(0.06);
+    expect(e.successRate()).toBeGreaterThan(0.94);
+  });
+
+  it('keeps a rolling five-minute history', () => {
+    const e = new SimulationEngine({ seed: 4 });
+    e.advance(20 * MIN);
+    expect(e.history.length).toBe(e.cfg.historySize);
+    const first = e.history.get(0);
+    const last = e.history.fromEnd(0);
+    expect(last.t - first.t).toBeLessThanOrEqual(5 * MIN);
+    expect(last.t - first.t).toBeGreaterThan(4.9 * MIN);
+  });
+
+  it('moves the load level over time', () => {
+    const e = new SimulationEngine({ seed: 8 });
+    const seen: number[] = [];
+    for (let i = 0; i < 60; i++) {
+      e.advance(MIN);
+      seen.push(e.load);
+    }
+    expect(Math.max(...seen) - Math.min(...seen)).toBeGreaterThan(0.2);
+    expect(Math.min(...seen)).toBeGreaterThanOrEqual(0);
+    expect(Math.max(...seen)).toBeLessThanOrEqual(1);
+  });
+
+  it('never leaves a parent waiting forever', () => {
+    const e = new SimulationEngine({ seed: 13 });
+    for (let i = 0; i < 240; i++) {
+      e.advance(15_000);
+      for (const a of e.agents) {
+        if (a.waiting) expect(e.now - a.stateSince).toBeLessThan(10 * MIN);
+      }
+    }
+  });
+});

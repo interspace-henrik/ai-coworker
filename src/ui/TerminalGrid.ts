@@ -59,8 +59,8 @@ class TerminalPanel {
     if (!agent) return;
     setText(this.id, agent.id);
     setText(this.role, agent.role);
-    setText(this.state, STATE_LABEL[agent.state]);
-    setClass(this.el, 'term st-' + agent.state);
+    setText(this.state, agent.waiting ? 'WAITING' : STATE_LABEL[agent.state]);
+    setClass(this.el, 'term st-' + agent.state + (agent.waiting ? ' waiting' : ''));
     const task = agent.task;
     setText(this.task, task ? task.key + '  ' + task.title : 'Waiting for work');
     setText(this.elapsed, task ? fmtElapsed(engine.now - agent.assignedAt) : '');

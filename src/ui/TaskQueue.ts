@@ -2,7 +2,7 @@ import type { SimulationEngine } from '../sim/engine';
 import type { Task } from '../sim/types';
 import { el, fmtSecs, setClass, setText } from './dom';
 
-const ROWS = 8;
+const ROWS = 7;
 
 interface Row {
   root: HTMLElement;

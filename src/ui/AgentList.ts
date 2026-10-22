@@ -90,14 +90,15 @@ export class AgentList {
       this.revs.set(agent.id, agent.rev);
       const rows = this.rows.get(agent.id);
       if (!rows) continue;
-      const busy = agent.task !== null;
-      const taskText = agent.task ? agent.task.title : 'Waiting for work';
+      const task = agent.task;
+      const taskText = task ? (task.parentId !== null ? '↳ ' : '') + task.title : 'Waiting for work';
+      const label = agent.waiting ? 'WAITING' : STATE_LABEL[agent.state];
       const progress = this.engine.progress(agent);
       for (const row of rows) {
-        setClass(row.root, 'ag-row st-' + agent.state);
-        setText(row.state, STATE_LABEL[agent.state]);
+        setClass(row.root, 'ag-row st-' + agent.state + (agent.waiting ? ' waiting' : ''));
+        setText(row.state, label);
         setText(row.task, taskText);
-        setClass(row.task, busy ? 'ag-task' : 'ag-task idle');
+        setClass(row.task, task ? 'ag-task' : 'ag-task idle');
         setScaleX(row.bar, progress);
       }
     }

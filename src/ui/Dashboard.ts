@@ -1,5 +1,6 @@
 import type { AppConfig } from '../config';
 import type { SimulationEngine } from '../sim/engine';
+import { ActivityChart } from './ActivityChart';
 import { AgentList } from './AgentList';
 import { el } from './dom';
 import { EventFeed } from './EventFeed';
@@ -17,6 +18,8 @@ export class Dashboard {
   private metrics: Metrics;
   private queue: TaskQueue;
   private feed: EventFeed;
+  private chart: ActivityChart;
+  private lastChart = -Infinity;
 
   constructor(private engine: SimulationEngine, cfg: AppConfig) {
     this.agents = new AgentList(engine);
@@ -24,11 +27,12 @@ export class Dashboard {
     this.metrics = new Metrics(engine);
     this.queue = new TaskQueue(engine);
     this.feed = new EventFeed(engine);
+    this.chart = new ActivityChart(engine);
 
     const right = el('section', 'panel side');
     const head = el('div', 'ph');
     head.append(el('span', 'ph-title', 'Operations'));
-    right.append(head, this.metrics.el, this.queue.el);
+    right.append(head, this.metrics.el, this.chart.el, this.queue.el);
 
     this.el.append(this.header.el, this.agents.el, this.terms.el, right, this.feed.el);
   }
@@ -45,5 +49,10 @@ export class Dashboard {
     this.metrics.update();
     this.queue.update();
     this.feed.update();
+    // The chart only gains a point every couple of seconds; redraw about once a second.
+    if (uptimeMs - this.lastChart >= 1000) {
+      this.lastChart = uptimeMs;
+      this.chart.update();
+    }
   }
 }

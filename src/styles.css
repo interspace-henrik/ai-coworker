@@ -212,6 +212,29 @@ body {
   font: 600 0.95rem var(--mono);
 }
 
+.hdr-load {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.meter {
+  width: 5rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--blue);
+  transform-origin: left center;
+  transition: transform 1.5s linear;
+}
+
 .hdr-right {
   display: flex;
   align-items: center;
@@ -363,6 +386,8 @@ body {
   color: var(--st);
 }
 
+.waiting { --st: var(--violet); }
+
 .ag-row.st-idle .ag-id {
   color: var(--muted);
 }
@@ -478,6 +503,11 @@ body {
 .tl.tl-assign .tl-tag,
 .tl.tl-assign .tl-text {
   color: var(--blue);
+}
+
+.tl.lv-dim .tl-tag,
+.tl.lv-dim .tl-text {
+  color: var(--dim);
 }
 
 .tl.lv-ok .tl-tag,
@@ -618,6 +648,85 @@ body {
 .tq-row.done .tq-mark { color: var(--green); }
 .tq-row.fail .tq-mark,
 .tq-row.fail .tq-title { color: var(--red); }
+
+/* ---- activity chart ------------------------------------------------------------------ */
+
+.chart {
+  flex: none;
+  padding: 0.55rem 0.8rem 0.7rem;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.66rem;
+  color: var(--muted);
+}
+
+.lg::before {
+  content: '';
+  display: inline-block;
+  width: 0.7rem;
+  height: 2px;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+}
+
+.lg-active::before { background: var(--blue); }
+.lg-queue::before { background: var(--amber); }
+
+.chart-plot {
+  position: relative;
+  height: 7.5rem;
+}
+
+.chart-plot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.c-grid {
+  stroke: var(--line-soft);
+  stroke-width: 1;
+}
+
+.c-area {
+  fill: rgba(76, 157, 255, 0.12);
+}
+
+.c-active {
+  fill: none;
+  stroke: var(--blue);
+  stroke-width: 1.6;
+}
+
+.c-queue {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 1.4;
+}
+
+.chart-ymax,
+.chart-x0,
+.chart-xnow {
+  position: absolute;
+  font: 0.6rem var(--mono);
+  color: var(--dim);
+}
+
+.chart-ymax { top: -0.1rem; left: 0.1rem; }
+.chart-x0 { bottom: -0.95rem; left: 0; }
+.chart-xnow { bottom: -0.95rem; right: 0; }
 
 /* ---- footer --------------------------------------------------------------------------- */
 

@@ -108,6 +108,10 @@ export interface Agent {
   log: RingBuffer<LogLine>;
   /** Personal pace factor; some agents are a little quicker than others. */
   tempo: number;
+  /** Planned working time (ms) of the current task, used to size retry attempts. */
+  workMs: number;
+  /** True while the agent is parked waiting for its subtasks. */
+  waiting: boolean;
   completed: number;
   failed: number;
   /** Incremented to invalidate a pending scheduled step (e.g. on early wake-up). */
