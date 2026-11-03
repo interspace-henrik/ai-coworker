@@ -19,6 +19,13 @@
   --green: #3fb871;
   --amber: #d8a33c;
   --red: #e5574f;
+  --term-text: #aeb8c4;
+  --term-tag: #6f8db3;
+  /* Matrix level 0..1, set by MatrixEffect. Backgrounds thin out so the rain shows through. */
+  --mx: 0;
+  --panel-bg: rgba(16, 20, 26, calc(1 - var(--mx)));
+  --panel-hi-bg: rgba(21, 26, 33, calc(1 - var(--mx)));
+  --term-bg: rgba(12, 15, 19, calc(1 - var(--mx)));
   --mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', 'DejaVu Sans Mono', Menlo, Consolas,
     'Liberation Mono', monospace;
   --sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'DejaVu Sans', 'Liberation Sans',
@@ -84,7 +91,7 @@ body {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  background: var(--panel);
+  background: var(--panel-bg);
   border: 1px solid var(--line);
   border-radius: 0.375rem;
 }
@@ -120,7 +127,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  background: var(--panel);
+  background: var(--panel-bg);
   border: 1px solid var(--line);
   border-radius: 0.375rem;
 }
@@ -403,7 +410,7 @@ body {
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  background: #0c0f13;
+  background: var(--term-bg);
   border: 1px solid var(--line);
   border-radius: 0.375rem;
   font-family: var(--mono);
@@ -415,7 +422,7 @@ body {
   justify-content: space-between;
   flex: none;
   padding: 0.45rem 0.75rem;
-  background: var(--panel-hi);
+  background: var(--panel-hi-bg);
   border-bottom: 1px solid var(--line-soft);
   font-size: 0.75rem;
 }
@@ -500,7 +507,7 @@ body {
   text-overflow: ellipsis;
   font-size: 0.74rem;
   line-height: 1.5;
-  color: #aeb8c4;
+  color: var(--term-text);
 }
 
 .tl-ts {
@@ -509,7 +516,7 @@ body {
 }
 
 .tl-tag {
-  color: #6f8db3;
+  color: var(--term-tag);
   margin-right: 0.5em;
 }
 
@@ -579,7 +586,7 @@ body {
 
 .kpi {
   padding: 0.7rem 0.9rem 0.75rem;
-  background: var(--panel);
+  background: var(--panel-bg);
 }
 
 .kpi-k {
@@ -751,7 +758,7 @@ body {
   padding: 0 1rem;
   overflow: hidden;
   white-space: nowrap;
-  background: var(--panel);
+  background: var(--panel-bg);
   border: 1px solid var(--line);
   border-radius: 0.375rem;
   font: 0.74rem var(--mono);
@@ -813,4 +820,60 @@ body {
   background: rgba(10, 12, 15, 0.92);
   font: 0.68rem var(--mono);
   color: var(--muted);
+}
+
+/* ---- matrix (?matrix=…) ---------------------------------------------------------------- */
+
+.mx-rain {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+html.mx-on,
+html.mx-on body {
+  background: #000;
+}
+
+.app {
+  z-index: 1;
+  /* At 100% only the rain is left. */
+  opacity: calc(1 - var(--mx));
+}
+
+html.mx-full .app {
+  visibility: hidden;
+}
+
+html.mx-glitch .app {
+  animation: mxglitch 0.9s steps(1, end);
+}
+
+@keyframes mxglitch {
+  0% { transform: translate(0.6rem, 0); opacity: 0.4; }
+  15% { transform: translate(-0.9rem, 0.2rem); opacity: 0.9; }
+  30% { transform: translate(0.3rem, -0.3rem); opacity: 0.2; }
+  45% { transform: translate(-0.4rem, 0); opacity: 1; }
+  60% { transform: translate(0.8rem, 0.1rem); opacity: 0.6; }
+  75% { transform: translate(-0.2rem, 0); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* ---- console (?view=console) ---------------------------------------------------------- */
+
+.console {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0c0c0c;
+}
+
+.console canvas {
+  display: block;
 }

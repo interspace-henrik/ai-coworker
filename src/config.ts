@@ -1,8 +1,20 @@
 import { randomSeed } from './sim/prng';
 
 export type Density = 'low' | 'normal' | 'high';
+export type ViewKind = 'dashboard' | 'console';
+
+/** ?matrix=RAMP[,HOLD][:MAX] — minutes to glide over, optional minutes to hold before restarting, max %. */
+export interface MatrixSpec {
+  rampMs: number;
+  /** Time at full level before a glitch resets to the dashboard and the cycle restarts; null = stay. */
+  holdMs: number | null;
+  /** Level reached at the end of the ramp, 0..1. 1 means nothing but the rain. */
+  max: number;
+}
 
 export interface AppConfig {
+  view: ViewKind;
+  matrix: MatrixSpec | null;
   agents: number;
   seed: number;
   /** True when the seed came from the URL (reproducible run). */
@@ -26,6 +38,37 @@ const PANELS: Record<Density, { panels: number; cols: number }> = {
   high: { panels: 9, cols: 3 },
 };
 
+export function parseMatrix(raw: string | null): MatrixSpec | null {
+  if (!raw) return null;
+  const m = /^(\d+(?:\.\d+)?)(?:,(\d+(?:\.\d+)?))?(?::(\d+(?:\.\d+)?))?$/.exec(raw.trim());
+  if (!m) return null;
+  const max = m[3] === undefined ? 1 : Math.min(100, Number(m[3])) / 100;
+  if (max <= 0) return null;
+  return {
+    rampMs: Number(m[1]) * 60_000,
+    holdMs: m[2] === undefined ? null : Number(m[2]) * 60_000,
+    max,
+  };
+}
+
+/**
+ * Matrix level at a given time since start, with smoothstep easing so the change creeps in
+ * and settles gently. `cycle` increments each time a held cycle restarts.
+ */
+export function matrixLevel(spec: MatrixSpec, elapsedMs: number): { level: number; cycle: number } {
+  let t = Math.max(0, elapsedMs);
+  let cycle = 0;
+  if (spec.holdMs !== null) {
+    const period = spec.rampMs + spec.holdMs;
+    if (period > 0) {
+      cycle = Math.floor(t / period);
+      t -= cycle * period;
+    }
+  }
+  const p = spec.rampMs > 0 ? Math.min(1, t / spec.rampMs) : 1;
+  return { level: p * p * (3 - 2 * p) * spec.max, cycle };
+}
+
 function num(params: URLSearchParams, key: string, fallback: number, min: number, max: number): number {
   const raw = params.get(key);
   if (raw === null || raw.trim() === '') return fallback;
@@ -45,6 +88,8 @@ export function parseConfig(search: string): AppConfig {
   const density: Density = rawDensity === 'low' || rawDensity === 'high' ? rawDensity : 'normal';
   const flag = params.get('debug');
   return {
+    view: params.get('view') === 'console' ? 'console' : 'dashboard',
+    matrix: parseMatrix(params.get('matrix')),
     agents: Math.round(num(params, 'agents', 30, 8, 100)),
     seed: seedParam ? Math.floor(seedParam) : randomSeed(),
     fixedSeed: seedParam > 0,

@@ -1,8 +1,17 @@
 import './styles.css';
 import { parseConfig, type AppConfig } from './config';
 import { SimulationEngine } from './sim/engine';
+import { ConsoleView } from './ui/console/ConsoleView';
 import { Dashboard } from './ui/Dashboard';
 import { DebugOverlay } from './ui/DebugOverlay';
+import { MatrixEffect } from './ui/MatrixEffect';
+
+/** What both views offer the tick loop. */
+interface View {
+  readonly el: HTMLElement;
+  layout(): void;
+  render(wallNow: number, uptimeMs: number): void;
+}
 
 /** UI refresh rate. Text and status do not need more on a wall display. */
 const TICK_MS = 100;
@@ -19,7 +28,8 @@ const reducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-mo
 const started = performance.now();
 
 let engine: SimulationEngine;
-let dashboard: Dashboard;
+let dashboard: View;
+let matrix: MatrixEffect | null = null;
 let mounted: HTMLElement = document.getElementById('app') as HTMLElement;
 let last = performance.now();
 let crashes: number[] = [];
@@ -30,7 +40,7 @@ const overlay = cfg.debug ? new DebugOverlay() : null;
 function boot(): void {
   engine = new SimulationEngine({ seed, agents: cfg.agents }, Date.now() - cfg.warmupMs);
   engine.advance(cfg.warmupMs);
-  dashboard = new Dashboard(engine, cfg, reducedMotion);
+  dashboard = cfg.view === 'console' ? new ConsoleView(engine, cfg, reducedMotion) : new Dashboard(engine, cfg, reducedMotion);
   mounted.replaceWith(dashboard.el);
   mounted = dashboard.el;
   // Measure after the first render so rows have their real content.
@@ -63,6 +73,7 @@ function tick(): void {
     engine.advance(dt * cfg.speed);
     syncClock(cfg);
     dashboard.render(Date.now(), now - started);
+    if (matrix) matrix.update(now - started);
     if (overlay) overlay.update(engine, cfg, performance.now() - t0);
   } catch (err) {
     recover(err);
@@ -111,6 +122,7 @@ window.addEventListener('resize', () => {
   resizeTimer = window.setTimeout(() => {
     try {
       dashboard.layout();
+      if (matrix) matrix.layout();
     } catch (err) {
       recover(err);
     }
@@ -128,6 +140,7 @@ try {
 } catch (err) {
   recover(err);
 }
+if (cfg.matrix && cfg.view === 'dashboard') matrix = new MatrixEffect(cfg.matrix, reducedMotion);
 if (overlay) document.body.append(overlay.el);
 timer = window.setInterval(tick, TICK_MS);
 tick();

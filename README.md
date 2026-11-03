@@ -36,8 +36,27 @@ Every push to `main` tests, builds and deploys to GitHub Pages via
 | `density=high`  | `normal`  | Terminal panels: `low` = 4, `normal` = 6, `high` = 9.                  |
 | `debug=1`       | off       | Diagnostics overlay: seed, simulated time, tick cost, DOM nodes, heap. |
 | `reload=24`     | off       | Reload the page every N hours, as extra safety on 24/7 screens.        |
+| `view=console`  | dashboard | Linux server view: tmux with a shell and `watch agentctl top`.         |
+| `matrix=…`      | off       | Gradually turn into the Matrix code, see below.                        |
 
 Invalid values fall back to defaults and out-of-range values are clamped.
+
+### `matrix=RAMP[,HOLD][:MAX]`
+
+Times are in minutes (decimals allowed), MAX in percent.
+
+| Example         | Effect                                                                         |
+| --------------- | ------------------------------------------------------------------------------ |
+| `matrix=5`      | Glide over in 5 minutes, then stay as pure Matrix.                             |
+| `matrix=5,5`    | Glide over in 5 minutes, hold 5 minutes, glitch back to normal, repeat.        |
+| `matrix=5:90`   | Glide over in 5 minutes up to 90% (the view still shows faintly), then stay.  |
+| `matrix=5,5:90` | Both.                                                                          |
+
+100% means only the code is left. In the dashboard the code rains on a canvas behind the
+panels while the palette drifts to green and the panels fade. In `view=console` the screen is
+one fixed character grid (like the film): individual cells are taken over in place and lit by
+drops falling down the columns, until every cell belongs to the code. Both combine, e.g.
+`?view=console&matrix=30,10`.
 
 ## Yodeck (Raspberry Pi 4)
 
@@ -67,6 +86,9 @@ src/
     Dashboard.ts       layout and render loop wiring
     Header, AgentList, TerminalGrid, Metrics, ActivityChart, TaskQueue, EventFeed,
     DebugOverlay
+    MatrixEffect.ts    ?matrix for the dashboard (rain canvas, palette, fade, glitch)
+    console/           ?view=console: tmux layout, scripted shell, agentctl top
+    term/              canvas character grid with a glyph atlas, and the Matrix code grid
   config.ts            URL parameters
   main.ts              boot, tick loop, error boundary, visibility and clock handling
 ```
