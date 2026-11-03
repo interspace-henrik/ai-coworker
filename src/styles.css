@@ -871,9 +871,43 @@ html.mx-glitch .app {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0c0c0c;
+  background: #020a04;
 }
 
 .console canvas {
+  display: block;
+}
+
+/* Static CRT treatment: scanlines and a soft vignette. Nothing animates, so it is one
+   composited layer that costs next to nothing per frame. */
+.crt,
+.egg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.5) 100%),
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.28) 3px);
+}
+
+/* "Shall we play a game?" on top of the dashboard. */
+.egg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #020a04;
+}
+
+.egg canvas {
   display: block;
 }

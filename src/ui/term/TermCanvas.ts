@@ -34,7 +34,8 @@ export class TermCanvas {
   private drawnFg: string[] = [];
   private drawnBg: string[] = [];
 
-  constructor(private background: string, private foreground: string) {
+  /** `glow` is a phosphor bloom radius in px, baked into the glyph atlas (free per frame). */
+  constructor(private background: string, private foreground: string, private glow = 0) {
     this.ctx = this.el.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
   }
 
@@ -48,7 +49,7 @@ export class TermCanvas {
     this.rows = Math.max(1, Math.floor(height / this.ch));
     this.el.width = this.cols * this.cw;
     this.el.height = this.rows * this.ch;
-    this.atlas = new GlyphAtlas(font, this.cw, this.ch);
+    this.atlas = new GlyphAtlas(font, this.cw, this.ch, this.glow);
     const n = this.cols * this.rows;
     this.chars = new Array(n).fill(' ');
     this.fg = new Array(n).fill(this.foreground);

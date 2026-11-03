@@ -36,10 +36,28 @@ Every push to `main` tests, builds and deploys to GitHub Pages via
 | `density=high`  | `normal`  | Terminal panels: `low` = 4, `normal` = 6, `high` = 9.                  |
 | `debug=1`       | off       | Diagnostics overlay: seed, simulated time, tick cost, DOM nodes, heap. |
 | `reload=24`     | off       | Reload the page every N hours, as extra safety on 24/7 screens.        |
-| `view=console`  | dashboard | Linux server view: tmux with a shell and `watch agentctl top`.         |
+| `view=console`  | dashboard | Green-phosphor text-mode screen, WOPR style (see below).               |
 | `matrix=…`      | off       | Gradually turn into the Matrix code, see below.                        |
+| `egg=60`        | `60`      | Minutes between "Shall we play a game?" interludes (`0` = never).     |
 
 Invalid values fall back to defaults and out-of-range values are clamped.
+
+### `view=console`
+
+One monochrome green character screen, as on a 1980s terminal: every element — the block
+lettering, the big digits, the frames, the meters, the chart — is made of characters of the
+same size from the IBM PC character set (CP437: `█▀▄░▒▓`, `─│┌┐`, `═║╔╗`). Box and block
+characters are drawn as exact shapes rather than font glyphs, so frames and lettering join
+seamlessly on any player. Agents get `╔═╗` windows with their log printing at baud speed,
+the status board shows DEFCON (5 normal, 4 queue backing up, 3 incident), and an operator
+types commands into the session at the bottom. Static scanlines and a phosphor glow (baked
+into the glyph atlas) complete the CRT look.
+
+### `egg=MINUTES`
+
+Every so often (default about once an hour, randomised) the screen goes dark and Joshua from
+WarGames asks "SHALL WE PLAY A GAME?". About 40 seconds later normal service resumes. Works
+in both views; `egg=0` turns it off, `egg=0.5` shows it within half a minute.
 
 ### `matrix=RAMP[,HOLD][:MAX]`
 
@@ -87,7 +105,7 @@ src/
     Header, AgentList, TerminalGrid, Metrics, ActivityChart, TaskQueue, EventFeed,
     DebugOverlay
     MatrixEffect.ts    ?matrix for the dashboard (rain canvas, palette, fade, glitch)
-    console/           ?view=console: tmux layout, scripted shell, agentctl top
+    console/           ?view=console: WOPR-style text screen, operator session, egg
     term/              canvas character grid with a glyph atlas, and the Matrix code grid
   config.ts            URL parameters
   main.ts              boot, tick loop, error boundary, visibility and clock handling

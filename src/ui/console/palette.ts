@@ -1,31 +1,25 @@
-/** xterm-like colours for the console view. */
-export const C = {
-  bg: '#0c0c0c',
-  fg: '#c5c8c6',
-  dim: '#707880',
-  white: '#f2f2f2',
-  green: '#5fd75f',
-  bgreen: '#87ff5f',
-  blue: '#5f87ff',
-  cyan: '#5fd7d7',
-  yellow: '#d7d75f',
-  red: '#ff5f5f',
-  magenta: '#d787d7',
-  border: '#444444',
-  barBg: '#2f9e44',
-  barFg: '#000000',
+/**
+ * Monochrome green phosphor. Hierarchy comes only from brightness and inverse video,
+ * as on a single-colour CRT terminal.
+ */
+export const P = {
+  bg: '#020a04',
+  faint: '#0f5222',
+  dim: '#1f9a44',
+  fg: '#3cff70',
+  bright: '#d2ffda',
 };
 
-export const HOST = 'ctl-01';
+export const HOST = 'CTL-01';
 
-/** Pads (or right-aligns) to a fixed width for monospace tables. Longer text is left as is. */
+/** Pads (or right-aligns) to a fixed width for monospace tables. Longer text is cut. */
 export function pad(text: string, width: number, right = false, fill = ' '): string {
-  if (text.length >= width) return text;
+  if (text.length >= width) return text.slice(0, width);
   const space = fill.repeat(width - text.length);
   return right ? space + text : text + space;
 }
 
-/** Small stable string hash for synthetic ids (pod suffixes, restart counts). */
+/** Small stable string hash for synthetic values. */
 export function hash(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -33,4 +27,11 @@ export function hash(s: string): number {
     h = Math.imul(h, 16777619);
   }
   return h >>> 0;
+}
+
+/** DEFCON 5 when all is well, 4 when the queue is backing up, 3 during an incident. */
+export function defcon(e: { incident: string | null; queue: unknown[]; cfg: { maxQueue: number } }): number {
+  if (e.incident) return 3;
+  if (e.queue.length >= e.cfg.maxQueue * 0.75) return 4;
+  return 5;
 }

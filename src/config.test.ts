@@ -10,6 +10,8 @@ describe('parseConfig', () => {
     expect(c.panels).toBe(6);
     expect(c.fixedSeed).toBe(false);
     expect(c.seed).toBeGreaterThan(0);
+    expect(c.eggMinutes).toBe(60);
+    expect(parseConfig('?egg=0').eggMinutes).toBe(0);
   });
 
   it('reads the documented parameters', () => {

@@ -2,6 +2,7 @@ import './styles.css';
 import { parseConfig, type AppConfig } from './config';
 import { SimulationEngine } from './sim/engine';
 import { ConsoleView } from './ui/console/ConsoleView';
+import { EggOverlay } from './ui/console/Egg';
 import { Dashboard } from './ui/Dashboard';
 import { DebugOverlay } from './ui/DebugOverlay';
 import { MatrixEffect } from './ui/MatrixEffect';
@@ -30,6 +31,7 @@ const started = performance.now();
 let engine: SimulationEngine;
 let dashboard: View;
 let matrix: MatrixEffect | null = null;
+let egg: EggOverlay | null = null;
 let mounted: HTMLElement = document.getElementById('app') as HTMLElement;
 let last = performance.now();
 let crashes: number[] = [];
@@ -74,6 +76,7 @@ function tick(): void {
     syncClock(cfg);
     dashboard.render(Date.now(), now - started);
     if (matrix) matrix.update(now - started);
+    if (egg) egg.update(now - started);
     if (overlay) overlay.update(engine, cfg, performance.now() - t0);
   } catch (err) {
     recover(err);
@@ -141,6 +144,11 @@ try {
   recover(err);
 }
 if (cfg.matrix && cfg.view === 'dashboard') matrix = new MatrixEffect(cfg.matrix, reducedMotion);
+// The console view runs its own interlude on its character grid.
+if (cfg.eggMinutes > 0 && cfg.view === 'dashboard') {
+  egg = new EggOverlay(cfg.eggMinutes * 60_000);
+  document.body.append(egg.el);
+}
 if (overlay) document.body.append(overlay.el);
 timer = window.setInterval(tick, TICK_MS);
 tick();

@@ -30,6 +30,8 @@ export interface AppConfig {
   debug: boolean;
   /** Reload the page after this many hours (0 = never). Optional extra safety for 24/7 screens. */
   reloadHours: number;
+  /** Minutes between "Shall we play a game?" interludes (0 = never). */
+  eggMinutes: number;
 }
 
 const PANELS: Record<Density, { panels: number; cols: number }> = {
@@ -100,5 +102,6 @@ export function parseConfig(search: string): AppConfig {
     warmupMs: 20_000,
     debug: flag !== null && flag !== '0' && flag !== 'false',
     reloadHours: num(params, 'reload', 0, 0, 24 * 30),
+    eggMinutes: num(params, 'egg', 60, 0, 24 * 60),
   };
 }
